@@ -9,18 +9,15 @@ module.exports = {
       params: {
         venv: "env",
         env: {
-          // Expose the launcher root so Python picks up sitecustomize.py,
-          // which pins faster-whisper to the GPU (CTranslate2 ROCm build) or
-          // falls back to CPU when no GPU device is available.
           PYTHONPATH: "{{path.resolve(cwd)}}",
-          // HIP runtime libraries for the ROCm build of CTranslate2
-          // (populated by install.js into rocm-libs/).
           LD_LIBRARY_PATH: "{{path.resolve(cwd)}}/rocm-libs",
-          // The ROCm CTranslate2 wheel has no kernels for gfx1103
-          // (Ryzen 7040/8040 "Phoenix"/"Hawk Point" iGPUs), so run as
-          // gfx1100. Harmless for other RDNA3 GPUs. If you have an RDNA2
-          // (gfx1030) or older GPU, comment this line out - see README.md.
-          HSA_OVERRIDE_GFX_VERSION: "11.0.0"
+          HSA_OVERRIDE_GFX_VERSION: "{{(args && args.override_gfx === false) ? '' : '11.0.0'}}",
+          HSA_ENABLE_SDMA: "{{(args && typeof args.hsa_sdma !== 'undefined') ? (args.hsa_sdma ? '1' : '0') : ''}}",
+          GPU_MAX_ALLOC_PERCENT: "90",
+          PYTORCH_CUDA_ALLOC_CONF: "expandable_segments:True",
+          WHISPER_DEVICE: "{{args && args.device ? args.device : 'cpu'}}",
+          WHISPER_COMPUTE_TYPE: "{{args && args.compute_type ? args.compute_type : ''}}",
+          WHISPER_FORCE_CPU: "{{(args && args.device === 'cpu') ? '1' : ((args && args.force_cpu) ? '1' : '')}}"
         },
         path: "app",
         message: [

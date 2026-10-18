@@ -117,3 +117,16 @@ curl -s -X POST http://127.0.0.1:7860/predict \
 The response contains the transcribed segments with start/end timestamps and
 text. See the app's [docs](https://github.com/jhj0517/Whisper-WebUI) for the
 full set of parameters (VAD, diarization, BGM separation, output format).
+
+## Device selection (CPU/GPU)
+
+Pinokio UI now offers device selection:
+- **Start (CPU - Stable)** – safest for AMD iGPUs (gfx1103). Whisper runs on CPU, torch-based features remain stable.
+- **Start (GPU - Experimental)** – tries ROCm CTranslate2 on GPU with `int8_float16` (lower VRAM/compute pressure). May be unstable on some iGPUs (kernel MES resets). 
+- **Advanced** – fine-tune: `float16`/`int8`/`int8_float16`, toggle `HSA_OVERRIDE_GFX_VERSION`, toggle `HSA_ENABLE_SDMA`.
+
+Environment variables respected by `sitecustomize.py`:
+- `WHISPER_DEVICE=cpu|cuda|auto` – force device
+- `WHISPER_FORCE_CPU=1` – force CPU
+- `WHISPER_COMPUTE_TYPE=float16|int8|int8_float16|...` – passed to faster-whisper (via UI params)
+

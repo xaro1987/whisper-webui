@@ -67,8 +67,43 @@ module.exports = {
         return [{
           default: true,
           icon: "fa-solid fa-power-off",
-          text: "Start",
+          text: "Start (CPU - Stable)",
           href: "start.js",
+          params: { device: "cpu" }
+        }, {
+          icon: "fa-solid fa-bolt",
+          text: "Start (GPU - Experimental)",
+          href: "start.js",
+          params: { device: "cuda", compute_type: "int8_float16" }
+        }, {
+          icon: "fa-solid fa-sliders",
+          text: "Advanced",
+          menu: [{
+            icon: "fa-solid fa-bolt",
+            text: "GPU (float16)",
+            href: "start.js",
+            params: { device: "cuda", compute_type: "float16" }
+          }, {
+            icon: "fa-solid fa-bolt",
+            text: "GPU (int8)",
+            href: "start.js",
+            params: { device: "cuda", compute_type: "int8" }
+          }, {
+            icon: "fa-solid fa-bolt",
+            text: "GPU (int8_float16, no HSA override)",
+            href: "start.js",
+            params: { device: "cuda", compute_type: "int8_float16", override_gfx: false }
+          }, {
+            icon: "fa-solid fa-bolt",
+            text: "GPU (int8_float16, HSA_SDMA=0)",
+            href: "start.js",
+            params: { device: "cuda", compute_type: "int8_float16", hsa_sdma: false }
+          }, {
+            icon: "fa-solid fa-bolt",
+            text: "GPU (int8_float16, no HSA override, HSA_SDMA=0)",
+            href: "start.js",
+            params: { device: "cuda", compute_type: "int8_float16", override_gfx: false, hsa_sdma: false }
+          }]
         }, {
           icon: "fa-solid fa-plug",
           text: "Update",
