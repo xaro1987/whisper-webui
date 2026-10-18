@@ -8,21 +8,25 @@ module.exports = {
       method: "shell.run",
       params: {
         venv: "env",
-        env: { },
+        env: {
+          // Expose the launcher root so Python picks up sitecustomize.py,
+          // which forces CTranslate2 / faster-whisper onto CPU on ROCm builds.
+          PYTHONPATH: "{{path.resolve(cwd)}}"
+        },
         path: "app",
         message: [
           "python app.py --inbrowser False",
         ],
         on: [{
-          "event": "/http:\/\/\\S+/",
-          "done": true
+          event: "/(http:\\/\\/\\S+)/",
+          done: true
         }]
       }
     },
     {
       method: "local.set",
       params: {
-        url: "{{input.event[0]}}"
+        url: "{{input.event[1]}}"
       }
     }
   ]

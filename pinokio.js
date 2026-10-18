@@ -5,7 +5,7 @@ module.exports = {
   description: "A Web UI for easy subtitle using whisper model.",
   icon: "icon.png",
   menu: async (kernel, info) => {
-    let installed = info.exists("app/env")
+    let installed = info.exists("app/env/pyvenv.cfg")
     let running = {
       install: info.running("install.js"),
       start: info.running("start.js"),
