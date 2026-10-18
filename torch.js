@@ -70,13 +70,16 @@ module.exports = {
       "next": null
     },
     // linux rocm (amd)
+    // The GPU is handled by the ROCm build of CTranslate2 (see install.js),
+    // so PyTorch itself stays CPU-only: a ROCm torch build and ROCm
+    // CTranslate2 can never coexist in one process (conflicting HIP runtimes).
     {
       "when": "{{platform === 'linux' && gpu === 'amd'}}",
       "method": "shell.run",
       "params": {
         "venv": "{{args && args.venv ? args.venv : null}}",
         "path": "{{args && args.path ? args.path : '.'}}",
-        "message": "uv pip install torch==2.7.0 torchvision==0.22.0 torchaudio==2.7.0 --index-url https://download.pytorch.org/whl/rocm6.3 --force-reinstall --no-deps"
+        "message": "uv pip install torch==2.8.0 torchvision==0.23.0 torchaudio==2.8.0 --index-url https://download.pytorch.org/whl/cpu --index-strategy unsafe-best-match --force-reinstall"
       },
       "next": null
     },
