@@ -59,8 +59,64 @@ CTranslate2 and pins `faster-whisper` to the GPU only when a working `cuda`
 - **`import ctranslate2` fails / `libhiprand.so.1` errors:** re-run **Install**
   so `rocm-libs/` is regenerated, or install ROCm / ollama so a HIP runtime is
   available.
-- **Transcription hangs / `GPU Hang` in kernel log:** the GPU is likely wedged
-  from an earlier crash — reboot, then retry (see note above).
+
+### GPU Hang on Radeon 780M (gfx1103) — known amdgpu/MES bug
+
+**Symptom:** GPU spikes to ~99% during transcription, then the process dies
+with `HW Exception by GPU node-1 ... reason : GPU Hang` and a core dump. The
+kernel log (`journalctl -k`) shows:
+
+```
+amdgpu ...: MES failed to respond to msg=REMOVE_QUEUE
+amdgpu ...: MES might be in unrecoverable state, issue a GPU reset
+```
+
+**Cause:** this is a documented amdgpu driver/firmware bug affecting Radeon
+780M (gfx1103) iGPUs under sustained ROCm compute load (ROCm issues #6512,
+#6386; Ubuntu LP #2147367). After the hang, the GPU typically stays *wedged*
+(`gpu_busy_percent` stuck at ~100% with zero load) until a reboot — any GPU
+run started in that state will hang immediately.
+
+**Fix applied on this machine:** the kernel parameter `amdgpu.cwsr_enable=0`
+(disables Compute Wavefront State Recovery — the most widely reported fix for
+780M hangs across kernels 6.x–7.2). Add it permanently:
+
+```bash
+sudo grubby --update-kernel=ALL --args="amdgpu.cwsr_enable=0"
+sudo reboot
+```
+
+Rollback: `sudo grubby --remove-args="amdgpu.cwsr_enable=0" --update-kernel=ALL`
+
+**Launcher-side mitigations (no reboot needed), applied by `start.js` for GPU
+runs and available as menu options:**
+
+- `HSA_ENABLE_SDMA=0` and `HSA_USE_SVM=0` (defaults for GPU runs; toggled via
+  the Advanced menu) — avoid the KFD SVM invalidation path implicated in MES
+  `REMOVE_QUEUE` hangs.
+- **Advanced → GPU (serialized kernels - stability)** sets
+  `AMD_SERIALIZE_KERNEL=3`, serializing kernel dispatches (slower, but much
+  less likely to trip the MES bug).
+- **Preflight wedge detection:** before launching GPU mode, `start.js` samples
+  `gpu_busy_percent` for a few seconds. If the GPU reports ~100% while idle
+  (wedged), a dialog explains the situation and offers to abort instead of
+  crashing.
+
+**If hangs persist**, try these kernel parameters one at a time (each requires
+a reboot):
+
+1. `amdgpu.ppfeaturemask=0xffff7fff` (disables GFXOFF — reduces idle-state
+   related MES races, costs some idle power)
+2. `amdgpu.uni_mes=0` (disables the Unified MES scheduler, falls back to the
+   legacy KIQ path)
+
+**Diagnosing:**
+
+- Launcher logs: `logs/api/start.js/latest`
+- Kernel log: `journalctl -k | grep -i amdgpu`
+- Core dumps: `coredumpctl list`
+- Current GPU state: `cat /sys/class/drm/card1/device/gpu_busy_percent`
+  (stuck at ~100 with no load = wedged → reboot)
 
 ## API
 
@@ -125,7 +181,10 @@ full set of parameters (VAD, diarization, BGM separation, output format).
 Pinokio UI offers device selection:
 - **Start (CPU - Stable)** – default. Whisper runs on CPU, torch-based features remain stable.
 - **Start (GPU - Experimental)** – runs Whisper on the GPU via ROCm CTranslate2 with `int8_float16` (lower VRAM/compute pressure).
-- **Advanced** – fine-tune: `float16`/`int8`/`int8_float16`, toggle `HSA_OVERRIDE_GFX_VERSION`, toggle `HSA_ENABLE_SDMA`.
+- **Advanced** – fine-tune: `float16`/`int8`, **serialized kernels** (stability), no `HSA_OVERRIDE_GFX_VERSION`, `HSA_ENABLE_SDMA=1`.
+
+GPU runs default to `HSA_ENABLE_SDMA=0` and `HSA_USE_SVM=0` (stability
+mitigations for gfx1103, see above).
 
 ### Verified configurations
 
@@ -136,11 +195,20 @@ on 2026-10-19 with:
 - Models `tiny` through `large-v3`, compute types `int8_float16` and `float16`
 - HIP runtime libraries from ollama + `hiprand`/`rocrand` debs collected into `rocm-libs/`
 
+Re-verified on 2026-10-19 after rebooting with `amdgpu.cwsr_enable=0`:
+
+- `/proc/cmdline` contains `amdgpu.cwsr_enable=0`
+- `tiny` and `large-v3` (`int8_float16`) transcribed on `device=cuda` with
+  `HSA_ENABLE_SDMA=0` and `HSA_USE_SVM=0`; no `GPU Hang` / `MES` /
+  `REMOVE_QUEUE` entries in `journalctl -k` afterwards
+- `gpu_busy_percent` returned to idle between runs (no wedge)
+
 Note: if the GPU previously crashed (kernel log shows
 `GPU Hang` / `HW Exception by GPU node`), the GPU can stay wedged until a
-reboot — subsequent runs will hang even with code that normally works. If GPU
-transcription hangs, reboot first, then retry; use **Start (CPU - Stable)** in
-the meantime.
+reboot — subsequent runs will hang even with code that normally works. The
+launcher's preflight detects this state before starting GPU mode and offers to
+abort; if GPU transcription still hangs, reboot first, then retry. Use
+**Start (CPU - Stable)** in the meantime.
 
 Environment variables respected by `sitecustomize.py`:
 - `WHISPER_DEVICE=cpu|cuda|auto` – force device

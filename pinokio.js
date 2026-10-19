@@ -23,24 +23,30 @@ module.exports = {
     } else if (installed) {
       if (running.start) {
         let local = info.local("start.js")
+        let wedged = local && local.preflight === 'WEDGED'
+        let warning = wedged ? [{
+          icon: "fa-solid fa-triangle-exclamation",
+          text: "<div><strong>GPU zawieszone</strong><div>Preflight wykrył zawieszone GPU - zrób reboot, zamiast używać trybu GPU</div></div>",
+          href: "start.js",
+        }] : []
         if (local && local.url) {
           return [{
             default: true,
             icon: "fa-solid fa-rocket",
             text: "Open Web UI",
             href: local.url,
-          }, {
+          }].concat(warning, [{
             icon: 'fa-solid fa-terminal',
             text: "Terminal",
             href: "start.js",
-          }]
+          }])
         } else {
           return [{
             default: true,
             icon: 'fa-solid fa-terminal',
             text: "Terminal",
             href: "start.js",
-          }]
+          }].concat(warning)
         }
       } else if (running.update) {
         return [{
@@ -89,20 +95,20 @@ module.exports = {
             href: "start.js",
             params: { device: "cuda", compute_type: "int8" }
           }, {
+            icon: "fa-solid fa-shield-halved",
+            text: "GPU (serialized kernels - stability)",
+            href: "start.js",
+            params: { device: "cuda", compute_type: "int8_float16", serialize: true }
+          }, {
             icon: "fa-solid fa-bolt",
             text: "GPU (int8_float16, no HSA override)",
             href: "start.js",
             params: { device: "cuda", compute_type: "int8_float16", override_gfx: false }
           }, {
             icon: "fa-solid fa-bolt",
-            text: "GPU (int8_float16, HSA_SDMA=0)",
+            text: "GPU (int8_float16, HSA_SDMA=1)",
             href: "start.js",
-            params: { device: "cuda", compute_type: "int8_float16", hsa_sdma: false }
-          }, {
-            icon: "fa-solid fa-bolt",
-            text: "GPU (int8_float16, no HSA override, HSA_SDMA=0)",
-            href: "start.js",
-            params: { device: "cuda", compute_type: "int8_float16", override_gfx: false, hsa_sdma: false }
+            params: { device: "cuda", compute_type: "int8_float16", hsa_sdma: true }
           }]
         }, {
           icon: "fa-solid fa-plug",
