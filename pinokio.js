@@ -1,10 +1,9 @@
-const path = require('path')
 module.exports = {
-  version: "3.7",
-  title: "Whisper-WebUI",
-  description: "A Web UI for easy subtitle using whisper model.",
+  title: "Whisper-WebUI (ROCm 780M) - launcher",
+  description: "Launch Whisper-WebUI with fixed AMD ROCm/GPU defaults, compute type UI fix, chunked transcription, device switch, no auto-start.",
   icon: "icon.png",
   menu: async (kernel, info) => {
+<<<<<<< HEAD
     let installed = info.exists("app/env/pyvenv.cfg")
     let running = {
       install: info.running("install.js"),
@@ -134,5 +133,24 @@ module.exports = {
         href: "install.js",
       }]
     }
+=======
+    const device = await info.local("/start.js");
+    const current = device?.device || "unknown";
+    return [
+      {
+        html: `<i class="fa-solid fa-circle-info"></i> Device: ${current} <span style='opacity:0.5'>(change via 'Przełącz na CPU/GPU')</span>`
+      },
+      { default: true, text: "Start (GPU - default)", icon: "fa-solid fa-play", href: "start.js?device=cuda" },
+      { text: "Start (CPU - Stable)", icon: "fa-solid fa-microchip", href: "start.js?device=cpu" },
+      { text: "Przełącz na CPU/GPU (restart)", icon: "fa-solid fa-repeat", href: "switch.js" },
+      { text: "Transcribe file (chunked)", icon: "fa-solid fa-scissors", href: "transcribe.js" },
+      { text: "Install", icon: "fa-solid fa-download", href: "install.js" },
+      { text: "Update", icon: "fa-solid fa-rotate", href: "update.js" },
+      { text: "Reset", icon: "fa-solid fa-trash-can", href: "reset.js" },
+      { text: "Smoke test (GPU)", icon: "fa-solid fa-rocket", href: "smoke.js" },
+      { text: "Logs", icon: "fa-solid fa-file-lines", href: "logs/" },
+      { text: "README", icon: "fa-solid fa-book", href: "README.md" }
+    ];
+>>>>>>> 33ce71d (fix(device): explicit CPU/GPU start, no auto-start race, in-app device switch)
   }
 }
