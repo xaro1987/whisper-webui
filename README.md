@@ -223,10 +223,16 @@ full set of parameters (VAD, diarization, BGM separation, output format).
 
 ## Device selection (CPU/GPU)
 
-Pinokio UI offers device selection:
-- **Start (CPU - Stable)** – default. Whisper runs on CPU, torch-based features remain stable.
+Nothing auto-starts: you explicitly pick the device, so a GPU request is never
+silently served by a CPU session.
+- **Start (CPU - Stable)** – Whisper runs on CPU, torch-based features remain stable.
 - **Start (GPU - Experimental)** – runs Whisper on the GPU via ROCm CTranslate2. The compute type is selected inside the app UI (the app picks a supported default for the detected device).
 - **Advanced** – stability overrides: **serialized kernels**, `no HSA_OVERRIDE_GFX_VERSION`, `HSA_ENABLE_SDMA=1`.
+
+While the app is running the menu shows the active device on the **Open Web UI**
+entry (`Open Web UI (GPU)` / `Open Web UI (CPU)`) and offers one-click
+**Przełącz na CPU/GPU (restart)** which stops and restarts `start.js` with the
+other device.
 
 GPU runs default to `HSA_ENABLE_SDMA=0` and `HSA_USE_SVM=0` (stability
 mitigations for gfx1103, see above).

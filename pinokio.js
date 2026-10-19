@@ -23,19 +23,27 @@ module.exports = {
     } else if (installed) {
       if (running.start) {
         let local = info.local("start.js")
+        let device = (local && local.device) ? local.device : "cpu"
+        let isGpu = device === "cuda"
         let wedged = local && local.preflight === 'WEDGED'
         let warning = wedged ? [{
           icon: "fa-solid fa-triangle-exclamation",
           text: "<div><strong>GPU zawieszone</strong><div>Preflight wykrył zawieszone GPU - zrób reboot, zamiast używać trybu GPU</div></div>",
           href: "start.js",
         }] : []
+        let switchItem = {
+          icon: isGpu ? 'fa-solid fa-microchip' : 'fa-solid fa-bolt',
+          text: isGpu ? "Przełącz na CPU (restart)" : "Przełącz na GPU (restart)",
+          href: "switch.js",
+          params: { device: isGpu ? "cpu" : "cuda" }
+        }
         if (local && local.url) {
           return [{
             default: true,
             icon: "fa-solid fa-rocket",
-            text: "Open Web UI",
+            text: isGpu ? "Open Web UI (GPU)" : "Open Web UI (CPU)",
             href: local.url,
-          }].concat(warning, [{
+          }].concat(warning, [switchItem, {
             icon: 'fa-solid fa-terminal',
             text: "Terminal",
             href: "start.js",
@@ -44,9 +52,9 @@ module.exports = {
           return [{
             default: true,
             icon: 'fa-solid fa-terminal',
-            text: "Terminal",
+            text: isGpu ? "Terminal (GPU)" : "Terminal (CPU)",
             href: "start.js",
-          }].concat(warning)
+          }].concat(warning, [switchItem])
         }
       } else if (running.update) {
         return [{
@@ -71,7 +79,6 @@ module.exports = {
         }]
       } else {
         return [{
-          default: true,
           icon: "fa-solid fa-power-off",
           text: "Start (CPU - Stable)",
           href: "start.js",
