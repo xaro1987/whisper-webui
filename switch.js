@@ -1,8 +1,8 @@
 module.exports = {
-<<<<<<< HEAD
+
   run: [
     {
-=======
+
   daemon: false,
   run: [
     {
@@ -29,16 +29,16 @@ module.exports = {
       }
     },
     {
->>>>>>> 33ce71d (fix(device): explicit CPU/GPU start, no auto-start race, in-app device switch)
+
       method: "script.restart",
       params: {
         uri: "start.js",
         params: {
-<<<<<<< HEAD
+
           device: "{{args && args.device ? args.device : 'cpu'}}"
-=======
+
           device: "{{args.device}}"
->>>>>>> 33ce71d (fix(device): explicit CPU/GPU start, no auto-start race, in-app device switch)
+
         }
       }
     }

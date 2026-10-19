@@ -3,7 +3,7 @@ module.exports = {
   description: "Launch Whisper-WebUI with fixed AMD ROCm/GPU defaults, compute type UI fix, chunked transcription, device switch, no auto-start.",
   icon: "icon.png",
   menu: async (kernel, info) => {
-<<<<<<< HEAD
+
     let installed = info.exists("app/env/pyvenv.cfg")
     let running = {
       install: info.running("install.js"),
@@ -133,7 +133,7 @@ module.exports = {
         href: "install.js",
       }]
     }
-=======
+
     const device = await info.local("/start.js");
     const current = device?.device || "unknown";
     return [
@@ -151,6 +151,6 @@ module.exports = {
       { text: "Logs", icon: "fa-solid fa-file-lines", href: "logs/" },
       { text: "README", icon: "fa-solid fa-book", href: "README.md" }
     ];
->>>>>>> 33ce71d (fix(device): explicit CPU/GPU start, no auto-start race, in-app device switch)
+
   }
 }
