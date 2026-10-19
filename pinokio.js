@@ -14,19 +14,19 @@ module.exports = {
     if (running.install) {
       return [{
         default: true,
-          icon: "fa-solid fa-plug",
-          text: "Installing",
-          href: "install.js",
+        icon: "fa-solid fa-plug",
+        text: "Installing",
+        href: "install.js",
       }]
     } else if (installed) {
       if (running.start) {
         let local = info.local("start.js")
-        let device = (local && local.device) ? local.device : "cpu"
+        let device = (local && local.device) ? local.device : (local && local.args && local.args.device) || "cpu"
         let isGpu = device === "cuda"
         let wedged = local && local.preflight === 'WEDGED'
         let warning = wedged ? [{
           icon: "fa-solid fa-triangle-exclamation",
-          text: "<div><strong>GPU zawieszone</strong><div>Preflight wykrył zawieszone GPU - zrób reboot, zamiast używać trybu GPU</div></div>",
+          text: "<div><strong>GPU zawieszone</strong><div>Preflight wykrył zawieszone GPU - zrób reboot</div></div>",
           href: "start.js",
         }] : []
         let switchItem = {
@@ -37,46 +37,55 @@ module.exports = {
         }
         if (local && local.url) {
           return [{
-        default: true,
-          icon: "fa-solid fa-rocket",
-          text: isGpu ? "Open Web UI (GPU)" : "Open Web UI (CPU)",
-          href: local.url,
+            default: true,
+            icon: "fa-solid fa-rocket",
+            text: isGpu ? "Open Web UI (GPU)" : "Open Web UI (CPU)",
+            href: local.url,
           }].concat(warning, [switchItem, {
             icon: 'fa-solid fa-terminal',
             text: "Terminal",
             href: "start.js",
+          }, {
+            icon: 'fa-solid fa-scissors',
+            text: "Transcribe file (chunked)",
+            href: "transcribe.js",
           }])
         } else {
           return [{
-        default: true,
-          icon: 'fa-solid fa-terminal',
-          text: isGpu ? "Terminal (GPU)" : "Terminal (CPU)",
-          href: "start.js",
-          }].concat(warning, [switchItem])
+            default: true,
+            icon: 'fa-solid fa-terminal',
+            text: isGpu ? "Terminal (GPU)" : "Terminal (CPU)",
+            href: "start.js",
+          }].concat(warning, [switchItem, {
+            icon: 'fa-solid fa-scissors',
+            text: "Transcribe file (chunked)",
+            href: "transcribe.js",
+          }])
         }
       } else if (running.update) {
         return [{
-        default: true,
+          default: true,
           icon: 'fa-solid fa-terminal',
           text: "Updating",
           href: "update.js",
         }]
       } else if (running.reset) {
         return [{
-        default: true,
+          default: true,
           icon: 'fa-solid fa-terminal',
           text: "Resetting",
           href: "reset.js",
         }]
       } else if (running.link) {
         return [{
-        default: true,
+          default: true,
           icon: 'fa-solid fa-terminal',
           text: "Deduplicating",
           href: "link.js",
         }]
       } else {
         return [{
+          default: true,
           icon: "fa-solid fa-power-off",
           text: "Start (CPU - Stable)",
           href: "start.js",
@@ -106,6 +115,10 @@ module.exports = {
             params: { device: "cuda", hsa_sdma: true }
           }]
         }, {
+          icon: "fa-solid fa-scissors",
+          text: "Transcribe file (chunked)",
+          href: "transcribe.js",
+        }, {
           icon: "fa-solid fa-plug",
           text: "Update",
           href: "update.js",
@@ -127,9 +140,9 @@ module.exports = {
     } else {
       return [{
         default: true,
-          icon: "fa-solid fa-plug",
-          text: "Install",
-          href: "install.js",
+        icon: "fa-solid fa-plug",
+        text: "Install",
+        href: "install.js",
       }]
     }
   }
