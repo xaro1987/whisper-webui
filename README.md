@@ -59,6 +59,8 @@ CTranslate2 and pins `faster-whisper` to the GPU only when a working `cuda`
 - **`import ctranslate2` fails / `libhiprand.so.1` errors:** re-run **Install**
   so `rocm-libs/` is regenerated, or install ROCm / ollama so a HIP runtime is
   available.
+- **Transcription hangs / `GPU Hang` in kernel log:** the GPU is likely wedged
+  from an earlier crash — reboot, then retry (see note above).
 
 ## API
 
@@ -120,10 +122,25 @@ full set of parameters (VAD, diarization, BGM separation, output format).
 
 ## Device selection (CPU/GPU)
 
-Pinokio UI now offers device selection:
-- **Start (CPU - Stable)** – safest for AMD iGPUs (gfx1103). Whisper runs on CPU, torch-based features remain stable.
-- **Start (GPU - Experimental)** – tries ROCm CTranslate2 on GPU with `int8_float16` (lower VRAM/compute pressure). May be unstable on some iGPUs (kernel MES resets). 
+Pinokio UI offers device selection:
+- **Start (CPU - Stable)** – default. Whisper runs on CPU, torch-based features remain stable.
+- **Start (GPU - Experimental)** – runs Whisper on the GPU via ROCm CTranslate2 with `int8_float16` (lower VRAM/compute pressure).
 - **Advanced** – fine-tune: `float16`/`int8`/`int8_float16`, toggle `HSA_OVERRIDE_GFX_VERSION`, toggle `HSA_ENABLE_SDMA`.
+
+### Verified configurations
+
+GPU mode was verified end-to-end (launcher start → Gradio API transcription)
+on 2026-10-19 with:
+
+- AMD Ryzen "Hawk Point" iGPU (gfx1103) via `HSA_OVERRIDE_GFX_VERSION=11.0.0`
+- Models `tiny` through `large-v3`, compute types `int8_float16` and `float16`
+- HIP runtime libraries from ollama + `hiprand`/`rocrand` debs collected into `rocm-libs/`
+
+Note: if the GPU previously crashed (kernel log shows
+`GPU Hang` / `HW Exception by GPU node`), the GPU can stay wedged until a
+reboot — subsequent runs will hang even with code that normally works. If GPU
+transcription hangs, reboot first, then retry; use **Start (CPU - Stable)** in
+the meantime.
 
 Environment variables respected by `sitecustomize.py`:
 - `WHISPER_DEVICE=cpu|cuda|auto` – force device
