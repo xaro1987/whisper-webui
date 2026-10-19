@@ -13,7 +13,7 @@ module.exports = {
       method: "shell.run",
       params: {
         message: [
-          "for i in 1 2 3 4; do for f in /sys/class/drm/card*/device/gpu_busy_percent; do cat \"$f\" 2>/dev/null; done; sleep 1; done | awk 'BEGIN{m=0}{if($1+0>m)m=$1+0}END{if(m>=90)print \"PREFLIGHT_WEDGED\";else print \"PREFLIGHT_OK\"}'"
+          "b=$(for i in 1 2 3 4; do for f in /sys/class/drm/card*/device/gpu_busy_percent; do cat \"$f\" 2>/dev/null; done; sleep 1; done | sort -n | tail -1); s=OK; [ \"${b:-0}\" -ge 90 ] && s=WEDGED; echo \"PREFLIGHT_$s\""
         ],
         on: [{
           event: "/PREFLIGHT_(WEDGED|OK)/",
@@ -56,14 +56,8 @@ module.exports = {
       method: "log",
       params: {
         raw: "Start GPU anulowany. Zrób reboot, a potem uruchom ponownie. W międzyczasie użyj 'Start (CPU - Stable)'."
-      }
-    },
-    {
-      when: "{{local.preflight === 'WEDGED' && input.action === 'abort'}}",
-      method: "jump",
-      params: {
-        id: "aborted"
-      }
+      },
+      next: null
     },
     // ---- Launch ----
     {
@@ -97,13 +91,6 @@ module.exports = {
       method: "local.set",
       params: {
         url: "{{input.event[1]}}"
-      }
-    },
-    {
-      id: "aborted",
-      method: "log",
-      params: {
-        raw: "Start przerwany."
       }
     }
   ]
