@@ -1,8 +1,4 @@
 module.exports = {
-
-  run: [
-    {
-
   daemon: false,
   run: [
     {
@@ -13,7 +9,7 @@ module.exports = {
       method: "input",
       params: {
         title: "Przełącz tryb urządzenia",
-        description: "Aktualny tryb: {{input.device || 'unknown'}}. Restartuje start.js.",
+        description: "Aktualny tryb: {{input.device || \'unknown\'}}. Restartuje start.js.",
         form: [
           {
             key: "device",
@@ -23,22 +19,17 @@ module.exports = {
               { label: "GPU (cuda)", value: "cuda" },
               { label: "CPU", value: "cpu" }
             ],
-            default: "{{input.device || 'cuda'}}"
+            default: "{{input.device || \'cuda\'}}"
           }
         ]
       }
     },
     {
-
       method: "script.restart",
       params: {
         uri: "start.js",
         params: {
-
-          device: "{{args && args.device ? args.device : 'cpu'}}"
-
           device: "{{args.device}}"
-
         }
       }
     }

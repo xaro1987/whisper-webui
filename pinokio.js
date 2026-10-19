@@ -3,7 +3,6 @@ module.exports = {
   description: "Launch Whisper-WebUI with fixed AMD ROCm/GPU defaults, compute type UI fix, chunked transcription, device switch, no auto-start.",
   icon: "icon.png",
   menu: async (kernel, info) => {
-
     let installed = info.exists("app/env/pyvenv.cfg")
     let running = {
       install: info.running("install.js"),
@@ -15,9 +14,9 @@ module.exports = {
     if (running.install) {
       return [{
         default: true,
-        icon: "fa-solid fa-plug",
-        text: "Installing",
-        href: "install.js",
+          icon: "fa-solid fa-plug",
+          text: "Installing",
+          href: "install.js",
       }]
     } else if (installed) {
       if (running.start) {
@@ -38,10 +37,10 @@ module.exports = {
         }
         if (local && local.url) {
           return [{
-            default: true,
-            icon: "fa-solid fa-rocket",
-            text: isGpu ? "Open Web UI (GPU)" : "Open Web UI (CPU)",
-            href: local.url,
+        default: true,
+          icon: "fa-solid fa-rocket",
+          text: isGpu ? "Open Web UI (GPU)" : "Open Web UI (CPU)",
+          href: local.url,
           }].concat(warning, [switchItem, {
             icon: 'fa-solid fa-terminal',
             text: "Terminal",
@@ -49,29 +48,29 @@ module.exports = {
           }])
         } else {
           return [{
-            default: true,
-            icon: 'fa-solid fa-terminal',
-            text: isGpu ? "Terminal (GPU)" : "Terminal (CPU)",
-            href: "start.js",
+        default: true,
+          icon: 'fa-solid fa-terminal',
+          text: isGpu ? "Terminal (GPU)" : "Terminal (CPU)",
+          href: "start.js",
           }].concat(warning, [switchItem])
         }
       } else if (running.update) {
         return [{
-          default: true,
+        default: true,
           icon: 'fa-solid fa-terminal',
           text: "Updating",
           href: "update.js",
         }]
       } else if (running.reset) {
         return [{
-          default: true,
+        default: true,
           icon: 'fa-solid fa-terminal',
           text: "Resetting",
           href: "reset.js",
         }]
       } else if (running.link) {
         return [{
-          default: true,
+        default: true,
           icon: 'fa-solid fa-terminal',
           text: "Deduplicating",
           href: "link.js",
@@ -128,29 +127,10 @@ module.exports = {
     } else {
       return [{
         default: true,
-        icon: "fa-solid fa-plug",
-        text: "Install",
-        href: "install.js",
+          icon: "fa-solid fa-plug",
+          text: "Install",
+          href: "install.js",
       }]
     }
-
-    const device = await info.local("/start.js");
-    const current = device?.device || "unknown";
-    return [
-      {
-        html: `<i class="fa-solid fa-circle-info"></i> Device: ${current} <span style='opacity:0.5'>(change via 'Przełącz na CPU/GPU')</span>`
-      },
-      { default: true, text: "Start (GPU - default)", icon: "fa-solid fa-play", href: "start.js?device=cuda" },
-      { text: "Start (CPU - Stable)", icon: "fa-solid fa-microchip", href: "start.js?device=cpu" },
-      { text: "Przełącz na CPU/GPU (restart)", icon: "fa-solid fa-repeat", href: "switch.js" },
-      { text: "Transcribe file (chunked)", icon: "fa-solid fa-scissors", href: "transcribe.js" },
-      { text: "Install", icon: "fa-solid fa-download", href: "install.js" },
-      { text: "Update", icon: "fa-solid fa-rotate", href: "update.js" },
-      { text: "Reset", icon: "fa-solid fa-trash-can", href: "reset.js" },
-      { text: "Smoke test (GPU)", icon: "fa-solid fa-rocket", href: "smoke.js" },
-      { text: "Logs", icon: "fa-solid fa-file-lines", href: "logs/" },
-      { text: "README", icon: "fa-solid fa-book", href: "README.md" }
-    ];
-
   }
 }
