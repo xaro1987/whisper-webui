@@ -74,7 +74,6 @@ module.exports = {
           GPU_MAX_ALLOC_PERCENT: "90",
           PYTORCH_CUDA_ALLOC_CONF: "expandable_segments:True",
           WHISPER_DEVICE: "{{args && args.device ? args.device : 'cpu'}}",
-          WHISPER_COMPUTE_TYPE: "{{args && args.compute_type ? args.compute_type : ''}}",
           WHISPER_FORCE_CPU: "{{(args && args.device === 'cpu') ? '1' : ((args && args.force_cpu) ? '1' : '')}}"
         },
         path: "app",

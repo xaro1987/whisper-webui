@@ -27,6 +27,15 @@ Other launcher actions (in the menu):
 - **Save Disk Space** — deduplicates redundant venv/library files (`link.js`).
 - **Reset** — wipes the venv and `app/` to start from scratch (`reset.js`).
 
+### Launcher patches to the app
+
+`app/` is a clone of upstream Whisper-WebUI. A small fix that keeps the
+`compute_type` dropdown value valid for the detected device lives in
+`patches/whisper-webui-compute-type.patch`. Because **Install**, **Update** and
+**Reset** can overwrite `app/`, `install.js` and `update.js` re-apply this patch
+automatically (idempotently) after cloning/updating, so the launcher always
+reproduces the same working state.
+
 ## GPU acceleration (Linux + AMD)
 
 Whisper inference runs on the GPU through the official
@@ -180,8 +189,8 @@ full set of parameters (VAD, diarization, BGM separation, output format).
 
 Pinokio UI offers device selection:
 - **Start (CPU - Stable)** – default. Whisper runs on CPU, torch-based features remain stable.
-- **Start (GPU - Experimental)** – runs Whisper on the GPU via ROCm CTranslate2 with `int8_float16` (lower VRAM/compute pressure).
-- **Advanced** – fine-tune: `float16`/`int8`, **serialized kernels** (stability), no `HSA_OVERRIDE_GFX_VERSION`, `HSA_ENABLE_SDMA=1`.
+- **Start (GPU - Experimental)** – runs Whisper on the GPU via ROCm CTranslate2. The compute type is selected inside the app UI (the app picks a supported default for the detected device).
+- **Advanced** – stability overrides: **serialized kernels**, `no HSA_OVERRIDE_GFX_VERSION`, `HSA_ENABLE_SDMA=1`.
 
 GPU runs default to `HSA_ENABLE_SDMA=0` and `HSA_USE_SVM=0` (stability
 mitigations for gfx1103, see above).
@@ -213,5 +222,7 @@ abort; if GPU transcription still hangs, reboot first, then retry. Use
 Environment variables respected by `sitecustomize.py`:
 - `WHISPER_DEVICE=cpu|cuda|auto` – force device
 - `WHISPER_FORCE_CPU=1` – force CPU
-- `WHISPER_COMPUTE_TYPE=float16|int8|int8_float16|...` – passed to faster-whisper (via UI params)
+
+The compute type is not set by the launcher; choose it in the app UI (defaults
+to a type the detected device supports).
 

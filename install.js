@@ -12,6 +12,19 @@ module.exports = {
         ]
       }
     },
+    // ---- Launcher patch: keep compute_type default valid for the detected device ----
+    // Upstream WhisperParams sets the dropdown value straight from the config, so a
+    // default that the device does not support (e.g. float16 on a limited GPU) can
+    // crash the UI. reset.js/update.js wipe this change, so it is re-applied here.
+    {
+      method: "shell.run",
+      params: {
+        path: "app",
+        message: [
+          "git apply --reverse --check ../patches/whisper-webui-compute-type.patch >/dev/null 2>&1 && echo \"compute-type patch already applied\" || git apply ../patches/whisper-webui-compute-type.patch",
+        ]
+      }
+    },
     {
       method: "shell.run",
       params: {
