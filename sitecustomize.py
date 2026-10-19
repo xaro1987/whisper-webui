@@ -25,6 +25,16 @@ def _probe_ct2_cuda():
 def _patch_whisper_device(device):
     """Pin FasterWhisperInference.get_device to a fixed value, lazily."""
     import importlib.machinery
+    import importlib.util
+
+    # Warn loudly instead of silently failing if upstream moved/renamed the
+    # module this launcher monkeypatches (device routing would otherwise break).
+    try:
+        if importlib.util.find_spec(_TARGET_MODULE) is None:
+            _log("WARNING: %s not found - Whisper device pinning disabled" % _TARGET_MODULE)
+            return
+    except Exception:
+        pass
 
     class _PatchLoader:
         def __init__(self, real):
@@ -36,8 +46,10 @@ def _patch_whisper_device(device):
         def exec_module(self, module):
             self._real.exec_module(module)
             cls = getattr(module, "FasterWhisperInference", None)
-            if cls is not None:
-                cls.get_device = staticmethod(lambda: device)
+            if cls is None:
+                _log("WARNING: FasterWhisperInference missing in %s - device pinning disabled" % _TARGET_MODULE)
+                return
+            cls.get_device = staticmethod(lambda: device)
 
         def __getattr__(self, name):
             return getattr(self._real, name)

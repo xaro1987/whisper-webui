@@ -1,3 +1,5 @@
+const { app } = require('./pins.js')
+
 module.exports = {
   requires: {
     bundle: "ai",
@@ -8,7 +10,20 @@ module.exports = {
       method: "shell.run",
       params: {
         message: [
-          "git clone https://github.com/jhj0517/Whisper-WebUI app",
+          "git clone " + app.repo + " app",
+        ]
+      }
+    },
+    // ---- Pin the app to the tested revision instead of tracking upstream master ----
+    // Keeps Install/Reset/Update deterministic: a new upstream commit only reaches
+    // users after `pins.js` is bumped and re-tested.
+    {
+      method: "shell.run",
+      params: {
+        path: "app",
+        message: [
+          "git fetch --all --tags",
+          "git checkout --force " + app.commit,
         ]
       }
     },
@@ -21,7 +36,7 @@ module.exports = {
       params: {
         path: "app",
         message: [
-          "git apply --reverse --check ../patches/whisper-webui-compute-type.patch >/dev/null 2>&1 && echo \"compute-type patch already applied\" || git apply ../patches/whisper-webui-compute-type.patch",
+          "if git apply --reverse --check ../patches/whisper-webui-compute-type.patch >/dev/null 2>&1; then echo \"compute-type patch already applied\"; elif git apply -3 ../patches/whisper-webui-compute-type.patch; then echo \"compute-type patch applied\"; else echo \"Error: compute-type patch failed to apply\"; exit 1; fi; grep -q default_compute_type modules/whisper/data_classes.py || { echo \"Error: compute-type patch verification failed\"; exit 1; }",
         ]
       }
     },
@@ -102,6 +117,13 @@ module.exports = {
           // generic PyPI ctranslate2 so the app keeps working on CPU.
           "LD_LIBRARY_PATH=rocm-libs HSA_OVERRIDE_GFX_VERSION=11.0.0 python -c \"import ctranslate2, sys; sys.exit(0 if ctranslate2.get_supported_compute_types('cuda') else 1)\" && echo \"ROCm CTranslate2 OK\" || (echo \"ROCm CTranslate2 unavailable - reverting to the CPU-compatible PyPI build\" && uv pip install --force-reinstall \"ctranslate2>=4.5,<5\")"
         ]
+      }
+    },
+    // ---- Fail loudly if the installed app + patch + runtime do not line up ----
+    {
+      method: "script.start",
+      params: {
+        uri: "smoke.js"
       }
     }
   ]

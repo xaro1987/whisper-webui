@@ -27,14 +27,50 @@ Other launcher actions (in the menu):
 - **Save Disk Space** — deduplicates redundant venv/library files (`link.js`).
 - **Reset** — wipes the venv and `app/` to start from scratch (`reset.js`).
 
+### App version pinning & update policy
+
+`app/` is a clone of upstream Whisper-WebUI, **pinned to a tested revision**.
+`pins.js` holds the single source of truth:
+
+```js
+module.exports = { app: { repo: "https://github.com/jhj0517/Whisper-WebUI",
+                           commit: "<tested-sha>" } }
+```
+
+`install.js` and `update.js` `git fetch` and `git checkout --force` that exact
+commit instead of following upstream `master`, so Install/Reset/Update always
+reproduce the same working state. To adopt a newer upstream version:
+
+1. bump `commit` in `pins.js`,
+2. run **Update** (or **Install**),
+3. confirm the smoke test passes and do a GPU/CPU transcription,
+4. commit the new `pins.js`.
+
 ### Launcher patches to the app
 
-`app/` is a clone of upstream Whisper-WebUI. A small fix that keeps the
-`compute_type` dropdown value valid for the detected device lives in
-`patches/whisper-webui-compute-type.patch`. Because **Install**, **Update** and
-**Reset** can overwrite `app/`, `install.js` and `update.js` re-apply this patch
-automatically (idempotently) after cloning/updating, so the launcher always
-reproduces the same working state.
+A small fix that keeps the `compute_type` dropdown value valid for the detected
+device lives in `patches/whisper-webui-compute-type.patch`. Because **Install**,
+**Update** and **Reset** overwrite `app/`, `install.js` and `update.js` re-apply
+it automatically. The apply is **idempotent and loud**: if upstream changed the
+patched lines, the step fails with an error and stops instead of silently
+running an unpatched app.
+
+### Smoke test after install/update
+
+`install.js` and `update.js` end by running `smoke.js` → `smoke_test.py`
+(no model download). It checks that the app modules import, the launcher patch
+is present, the `sitecustomize.py` device-pinning target exists, and
+`ctranslate2` imports. On failure it stops with a visible error screen.
+
+### Launcher update policy
+
+The launcher's own `update.js` uses `git pull --ff-only`: it fast-forwards or
+fails loudly, never silently merging. The repository uses `origin` = this
+project's fork and `upstream` = `pinokiofactory/whisper-webui` for reference.
+
+Remote layout:
+- `origin` — push target (your fork).
+- `upstream` — reference only.
 
 ## GPU acceleration (Linux + AMD)
 
